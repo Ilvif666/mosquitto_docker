@@ -1,0 +1,46 @@
+version: '3.7'
+services:
+  mosquitto_0:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward0.log:/var/log/mosquitto
+    ports:
+      - '1883:1883'
+
+  mosquitto_1:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward1.log:/var/log/mosquitto
+    ports:
+      - '1884:1883'
+
+  mosquitto_2:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward2.log:/var/log/mosquitto
+    ports:
+      - '1885:1883'
+
+  mosquitto_3:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
+    ports:
+      - '1886:1883'
+
+  mosquitto_4:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
+    ports:
+      - '1887:1883'
