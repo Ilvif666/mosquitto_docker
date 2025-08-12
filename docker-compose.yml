@@ -8,6 +8,8 @@ services:
       - ./mosquitto_logs/ward0.log:/var/log/mosquitto
     ports:
       - '1883:1883'
+    networks:
+      - sw_net
 
   mosquitto_1:
     image: eclipse-mosquitto:latest
@@ -17,6 +19,8 @@ services:
       - ./mosquitto_logs/ward1.log:/var/log/mosquitto
     ports:
       - '1884:1883'
+    networks:
+      - sw_net
 
   mosquitto_2:
     image: eclipse-mosquitto:latest
@@ -26,6 +30,8 @@ services:
       - ./mosquitto_logs/ward2.log:/var/log/mosquitto
     ports:
       - '1885:1883'
+    networks:
+      - sw_net
 
   mosquitto_3:
     image: eclipse-mosquitto:latest
@@ -35,6 +41,8 @@ services:
       - ./mosquitto_logs/ward3.log:/var/log/mosquitto
     ports:
       - '1886:1883'
+    networks:
+      - sw_net
 
   mosquitto_4:
     image: eclipse-mosquitto:latest
@@ -44,3 +52,9 @@ services:
       - ./mosquitto_logs/ward3.log:/var/log/mosquitto
     ports:
       - '1887:1883'
+    networks:
+      - sw_net
+
+networks:
+  sw_net:
+    external: true
