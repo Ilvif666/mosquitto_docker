@@ -10,7 +10,6 @@ services:
       - '1883:1883'
     networks:
       - sw_net
-
   mosquitto_1:
     image: eclipse-mosquitto:latest
     volumes:
@@ -21,7 +20,6 @@ services:
       - '1884:1883'
     networks:
       - sw_net
-
   mosquitto_2:
     image: eclipse-mosquitto:latest
     volumes:
@@ -32,7 +30,6 @@ services:
       - '1885:1883'
     networks:
       - sw_net
-
   mosquitto_3:
     image: eclipse-mosquitto:latest
     volumes:
@@ -43,7 +40,6 @@ services:
       - '1886:1883'
     networks:
       - sw_net
-
   mosquitto_4:
     image: eclipse-mosquitto:latest
     volumes:
@@ -54,7 +50,46 @@ services:
       - '1887:1883'
     networks:
       - sw_net
-
+  mosquitto_5:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
+    ports:
+      - '1888:1883'
+    networks:
+      - sw_net
+  mosquitto_6:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward6.log:/var/log/mosquitto
+    ports:
+      - '1889:1883'
+    networks:
+      - sw_net
+  mosquitto_7:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward7.log:/var/log/mosquitto
+    ports:
+      - '1890:1883'
+    networks:
+      - sw_net
+  mosquitto_8:
+    image: eclipse-mosquitto:latest
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./passwd:/etc/mosquitto/passwd
+      - ./mosquitto_logs/ward8.log:/var/log/mosquitto
+    ports:
+      - '1891:1883'
+    networks:
+      - sw_net
 networks:
   sw_net:
     external: true
