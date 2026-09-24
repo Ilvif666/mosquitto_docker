@@ -5,7 +5,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward0.log:/var/log/mosquitto
     ports:
       - '1883:1883'
     networks:
@@ -15,7 +14,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward1.log:/var/log/mosquitto
     ports:
       - '1884:1883'
     networks:
@@ -25,7 +23,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward2.log:/var/log/mosquitto
     ports:
       - '1885:1883'
     networks:
@@ -35,7 +32,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
     ports:
       - '1886:1883'
     networks:
@@ -45,7 +41,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
     ports:
       - '1887:1883'
     networks:
@@ -55,7 +50,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward3.log:/var/log/mosquitto
     ports:
       - '1888:1883'
     networks:
@@ -65,7 +59,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward6.log:/var/log/mosquitto
     ports:
       - '1889:1883'
     networks:
@@ -75,7 +68,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward7.log:/var/log/mosquitto
     ports:
       - '1890:1883'
     networks:
@@ -85,7 +77,6 @@ services:
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./passwd:/etc/mosquitto/passwd
-      - ./mosquitto_logs/ward8.log:/var/log/mosquitto
     ports:
       - '1891:1883'
     networks:
