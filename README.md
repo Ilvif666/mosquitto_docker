@@ -156,33 +156,64 @@ docker logs mosquitto_docker_mosquitto_3_1 --tail 50   # логи одного �
 `docker restart`. С именованным томом данные переживают и пересоздание контейнера, и
 перезагрузку стенда.
 
-Проверено на стенде 169 (изолированный тестовый проект, docker-compose 1.29.2, 2026-09-25):
-с именованным томом цикл `up -d` → запись в `/mosquitto/data` → `down` → `up -d` оставляет
-каталог на месте; с анонимным томом тот же цикл его опустошает.
+Проверено на стенде 169 (docker-compose 1.29.2, 2026-09-25) на контрольном retained-сообщении
+`test/stage14/probe`: после публикации оно читается обратно и переживает все три сценария —
+`docker restart` контейнера, `docker-compose up -d --force-recreate mosquitto_0` и
+`sudo systemctl restart mosquitto` (полный `down` + `up` девяти брокеров, то есть то же, что
+происходит при загрузке стенда). `mosquitto.db` при этом лежит в именованном томе
+(`mosquitto_docker_mosquitto_<n>_data`) и растёт по мере появления retained-состояния.
+Контрольное сообщение после проверки снято.
 
-**Что именно терялось.** Единственная публикация с `retain: true` в бэкенде — команда
-`commands/update/deep_sleep` (`smartWard/controllers/mqttController.js`). После пересоздания
-брокеров устройство не получало последнюю команду deep sleep и оставалось на своём состоянии из
-EEPROM — если настройку нужно применить, её публикуют заново из интерфейса.
-Остальные данные (`unit_weight`, данные дисплея) устройства запрашивают у бэкенда сами при
-включении (`backend/commands/request_unit_weight`, `backend/commands/request_display_data`),
-и публикуются они без `retain` — от retained-состояния брокера это не зависит.
+Две оговорки из той же проверки:
 
-**Перенос данных со старых анонимных томов** (как это делалось на стенде 169, с бэкапом в
-`/home/pi/backup/`):
+* `mosquitto.db` пишется не сразу: по умолчанию раз в 30 минут (`autosave_interval`) и при
+  корректной остановке брокера (`SIGTERM`). Поэтому «пустой файл в томе» при работающем
+  контейнере — это норма, а не потеря данных; но и остановка брокера перед переносом томов
+  обязательна (см. ниже).
+* снимок `mosquitto_sub -t '#' -v -W 3` **не равен** списку retained: за три секунды окна в
+  него попадает и живой трафик (телеметрия устройств, команды). Для retained-состояния
+  используйте `mosquitto_sub -t '#' -v -R -W 3` (`--retained-only`).
+
+**Что именно терялось.** В бэкенде с `retain: true` публикуется команда
+`commands/update/deep_sleep` (`smartWard/controllers/mqttController.js`); кроме неё retained
+бывает у сообщений самих устройств (`telemetry/status`, `telemetry/weight`) и у команд
+`commands/send/weight`, поэтому терялось не только deep sleep. После пересоздания брокеров
+устройство не получало последнюю retained-команду и оставалось на своём состоянии из EEPROM —
+если настройку нужно применить, её публикуют заново из интерфейса. Данные `unit_weight` и
+данные дисплея устройства запрашивают у бэкенда сами при включении
+(`backend/commands/request_unit_weight`, `backend/commands/request_display_data`), они
+публикуются без `retain` и от retained-состояния брокера не зависят.
+
+**Перенос данных со старых анонимных томов** (так это делалось на стенде 169 2026-09-25;
+бэкап — `/home/pi/backup/mqtt-anon-<метка>/`):
 
 1. выписать монтирования и скопировать содержимое анонимных томов в бэкап:
-   `docker inspect -f '{{json .Mounts}}' mosquitto_docker_mosquitto_<n>_1`;
-2. обновить `docker-compose.yml` и создать именованные тома (`docker volume create
-   mosquitto_<n>_data`) — но пропустить этот шаг для тех брокеров, где данные не нужны;
-3. перенести содержимое анонимного тома в именованный:
-   `docker run --rm -v <anon>:/from -v mosquitto_<n>_data:/to alpine sh -c 'cp -a /from/. /to/'`;
-4. пересоздать брокеров (`docker-compose up -d`), убедиться, что `mosquitto.db` на месте, и
-   проверить, что он переживает цикл `down` + `up`.
+   `docker inspect -f '{{json .Mounts}}' mosquitto_docker_mosquitto_<n>_1`, затем
+   `docker exec mosquitto_docker_mosquitto_<n>_1 tar -C /mosquitto -cf - data log > <бэкап>.tar`;
+2. **остановить брокеров, а не удалять их**: `docker-compose stop` — по `SIGTERM` mosquitto
+   записывает `mosquitto.db` в текущий анонимный том (иначе состояние, живущее только в памяти,
+   будет потеряно при пересоздании);
+3. обновить `docker-compose.yml`, создать именованные тома и перенести в них данные (образ
+   `alpine` не нужен, подходит сам `eclipse-mosquitto`):
 
-Старые анонимные тома после проверки можно удалить, чтобы не занимать место. `docker-compose
-down -v` в этом каталоге по-прежнему недопустим: `-v` удаляет и именованные тома вместе с
-данными брокеров.
+   ```bash
+   docker volume create mosquitto_docker_mosquitto_<n>_data
+   docker run --rm -u 0 --entrypoint sh \
+     --volumes-from mosquitto_docker_mosquitto_<n>_1 \
+     -v mosquitto_docker_mosquitto_<n>_data:/to eclipse-mosquitto:latest \
+     -c 'cp -a /mosquitto/data/. /to/ && chown -R 1883:1883 /to'
+   ```
+
+4. поднять брокеров заново: `docker-compose up -d` — контейнеры пересоздаются, но данные уже
+   лежат в именованных томах;
+5. проверить: `docker inspect` показывает `mosquitto_docker_mosquitto_<n>_data` на
+   `/mosquitto/data`, retained на месте (`mosquitto_sub -t '#' -v -R -W 3`), и после
+   `sudo systemctl restart mosquitto` retained не изменился.
+
+Осиротевшие анонимные тома после проверки можно удалить, чтобы не занимать место, но только
+осознанно (`docker volume ls -qf dangling=true`) и с согласия владельца стенда.
+`docker-compose down -v` в этом каталоге по-прежнему недопустим: `-v` удаляет и именованные
+тома вместе с данными брокеров.
 
 ## Логи
 
@@ -227,8 +258,9 @@ docker exec -it mosquitto_docker_mosquitto_0_1 \
 
 ## Грабли
 
-1. **`docker-compose down` (и `systemctl restart mosquitto`) стирает retained-состояние** —
-   см. раздел про тома. Точечный `docker restart` безопаснее.
+1. **`docker-compose down` сам по себе больше не стирает retained-состояние** — с 2026-09-25
+   данные лежат в именованном томе (см. раздел про тома). Но `docker-compose down -v`, удаление
+   тома или возврат к compose без объявленных томов состояние по-прежнему уничтожат.
 2. **Один общий `mosquitto.conf` и один общий `passwd`** на девять брокеров: правка
    затрагивает все шкафы, перезапуск — тоже.
 3. **Права на `passwd`.** Файл должен читаться uid 1883; иначе брокеры не стартуют.
